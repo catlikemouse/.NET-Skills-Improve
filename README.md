@@ -1,76 +1,63 @@
 # DeepSeek .NET Architect System (架构师修行)
 
-> **"From CRUD to Architect"** - 这是一个基于 `Skills.md` 知识体系构建的沉浸式 RPG 学习系统。它将 .NET 架构师的学习路线游戏化，通过 AI 扮演“系统架构师”发布任务、审查代码，帮助宿主（你）完成职级进化。
+> **"From CRUD to Architect"** - 这是一个基于 DeepSeek AI 驱动的沉浸式 RPG 学习系统。它将 .NET 架构师的学习路线游戏化，你将扮演一名修仙者，通过完成 AI 发布的架构挑战，从“练气期”（初级开发）一步步飞升至“大乘期”（首席架构师）。
 
-## 🌟 核心理念 (Core Philosophy)
+![System Preview](https://via.placeholder.com/800x400?text=DeepSeek+Architect+System)
 
-本系统遵循 **L-C-R Loop (Learn - Challenge - Review)** 闭环设计：
+## 🌟 核心特色 (Core Features)
 
-1.  **Learn (学习)**: 系统根据你的当前等级 (Junior/Senior/Architect) 提供知识上下文。
-2.  **Challenge (挑战)**: AI 发布 ERP 场景任务（如：设计高并发秒杀、处理全渠道订单）。
-3.  **Review (审查)**: AI 对你的代码进行“毒舌”审查，并基于 Parse 结果自动结算 XP。
+### 1. 沉浸式 RPG 体验 (Gamification 2.0)
+系统不再是枯燥的问答，而是分为三个**试炼区域 (Zones)**：
+*   **🍃 新手村 (Novice Village)**: `Lv.1 - Lv.5`. 基础语法与概念 (LINQ, Async). 语气亲切的导师引导。
+*   **🔥 代码战场 (Code Battlefield)**: `Lv.5 - Lv.15`. 复杂的业务场景代码编写. 魔鬼教官严格 Review，有 Bug 拒绝给分。
+*   **🏰 通天塔 (Architect Tower)**: `Lv.15+`. 也就是无尽模式。挑战高并发、微服务拆分、DDD 落地等架构难题。
 
-## 🛠️ 技术架构 (Architecture)
+### 2. 隐形协议系统 (Invisible Protocol)
+*   **智能结算**: AI 会在后台通过 JSON 协议自动结算你的经验值 (XP) 和技能 (Skill Unlock)。
+*   **沉浸体验**: 前端通过拦截器自动隐藏所有通讯协议代码，你看到的只有自然语言回复和金色的系统奖励提示。
 
-这也体现了“架构师”的极简主义美学：**No Frameworks, Just Code.**
+### 3. 本地持久化 (Local Persistence)
+*   你的等级、经验、聊天记录、API Key 全部存储在本地 (`LocalStorage` + `JSON DB`)。
+*   刷新页面不丢失进度，甚至支持导出存档。
 
-### 1. Frontend (Pure V.J.S)
-*   **HTML5/CSS3**: 采用 Dark Fantasy / Chinese Zen 风格，无 Tailwind/Bootstrap 依赖。
-*   **Vanilla JS**: 模块化设计 (`app.js`, `state.js`, `components.js`)，无 React/Vue 打包负担。
+## 🛠️ 技术栈 (Tech Stack)
 
-### 2. Backend (Node.js)
-*   **server.js**: 一个仅依赖原生 `http` 和 `fs` 模块的轻量级服务器。
-*   **API**:
-    *   `POST /api/save`: 将前端的聊天记录、用户存档实时写入硬盘。
+体现架构师的极简主义美学：**No Frameworks, Just Code.**
 
-### 3. Database (JSON NoSQL)
-*   **JsonDB Engine**: 前端实现的轻量级文档数据库引擎。
-*   **Persistence**: 数据双重存储：
-    *   **Level 1**: Browser LocalStorage (极速读取，页面刷新不丢失)。
-    *   **Level 2**: `Resource/*.json` (物理文件存档，Git 友好)。
+*   **Frontend**: Native HTML5 + Vanilla JS (ES6+). 无 React/Vue 打包负担。
+*   **Styling**: 纯 CSS3 (Variables, Flexbox, Grid). 实现了“太极生两仪”的启动动画与毛玻璃特效。
+*   **AI Integration**: 直连 DeepSeek API，支持流式输出 (Streaming Typewriter)。
 
 ## 📂 目录结构 (Directory Structure)
 
 ```bash
 /
 ├── start_website.bat      # [Entry] 一键启动脚本 (Windows)
-├── server.js              # [Backend] Node.js 后端服务
-├── index.html             # [UI] 单页应用入口
-├── Skills.md              # [Knowledge] 核心知识库 (Prompt Source)
-├── Resource/              # [Data] 数据库持久化目录
-│   ├── chat_logs.json     # 全量聊天记录
-│   ├── user_profile.json  # 用户存档 (XP, Level)
-│   └── sessions.json      # 会话列表
+├── server.js              # [Backend] Node.js 轻量级服务器
+├── index.html             # [UI] 沉浸式单页入口
+├── Skills.md              # [Knowledge] 技能树定义
+├── Resource/              # [Data] 存档目录
+│   ├── chat_logs.json     # 聊天记录
+│   └── user_profile.json  # 用户档案
 ├── js/
-│   ├── app.js             # 主控制器 (L-C-R Loop Parser)
-│   ├── data.js            # 静态数据 (System Prompts, Scenarios)
-│   ├── state.js           # 状态管理 (Flux-like Store)
-│   ├── json_db.js         # 数据库引擎
-│   └── components.js      # UI 组件库
+│   ├── app.js             # 主逻辑控制器
+│   ├── api.js             # DeepSeek API 封装 (Stream)
+│   ├── state.js           # 状态管理 (XP, Level System)
+│   ├── data.js            # 游戏数据 (Prompts, Zones)
+│   ├── components.js      # UI 渲染组件
+│   └── json_db.js         # 前端 NoSQL 引擎
 └── css/
-    ├── style.css          # 主样式表
-    ├── animations.css     # 动效库
-    └── extra_styles.css   # 补丁样式
+    ├── intro.css          # 启动动画与核心布局
+    ├── style.css          # 通用样式
+    └── animations.css     # 粒子与特效
 ```
 
 ## 🚀 快速开始 (Quick Start)
 
-### 前置要求
-*   **Node.js**: v14.0+ (系统已检测到 v20.19.5)
-
-### 交互指令
-双击根目录下的 **`start_website.bat`**。
-
-1.  脚本会自动启动 Node.js 服务器。
-2.  请保持黑色命令窗口开启。
-3.  在浏览器访问：[http://localhost:8000](http://localhost:8000)
-
-## 🎮 玩法指引 (Gameplay)
-
-1.  **选择模式**: 推荐选择左侧的 **"架构师系统 (Arch System)"**。
-2.  **接取任务**: 输入 "System Startup" 或 "我要接任务"。
-3.  **提交方案**: 像在工作中一样描述你的设计或粘贴代码。
-4.  **接收反馈**: AI 会进行评分。如果通过，你会看到系统气泡提示 `XP +100`，左侧进度条会自动更新。
+1.  **启动**: 双击根目录下的 `start_website.bat`。
+2.  **访问**: 打开浏览器访问 [http://localhost:8000](http://localhost:8000)。
+3.  **配置**: 点击右上角设置图标，输入你的 DeepSeek API Key (仅本地存储)。
+4.  **开始**: 在聊天框输入 "System Startup" 或直接开始提问，迎接你的第一场试炼！
 
 ---
 *Created with DeepSeek Agentic Coding.*
