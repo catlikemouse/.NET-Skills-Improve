@@ -1,0 +1,15 @@
+[
+  {
+    "_id": "current_user",
+    "username": "Guest",
+    "level": 1,
+    "title": "初级修行者",
+    "xp": 0,
+    "nextLevelXp": 100,
+    "unlockedSkills": [],
+    "completedScenarios": [],
+    "apiKey": "",
+    "currentMode": "mode_basic",
+    "_created_at": 1769415747559
+  }
+]

@@ -1,0 +1,18 @@
+{
+    "meta": {
+        "version": "1.0",
+        "type": "NoSQL_Document",
+        "created_at": "2026-01-26"
+    },
+    "user_profile": {
+        "id": "u_001",
+        "name": "User",
+        "preferences": {
+            "mode": "basic"
+        }
+    },
+    "resources": [
+        { "id": "res_001", "type": "chat_log", "path": "local/history.json" }
+    ],
+    "data_store": []
+}

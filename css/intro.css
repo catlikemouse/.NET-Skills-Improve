@@ -1,0 +1,187 @@
+/* Tai Chi (Yin Yang) Animation */
+.taichi-container {
+    position: relative;
+    width: 120px;
+    height: 120px;
+    animation: spin 3s linear infinite;
+    filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.4));
+}
+
+.taichi {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to bottom, #000 0%, #000 50%, #fff 50%, #fff 100%);
+    border-radius: 50%;
+    border: 1px solid #333;
+    /* Subtle border for contrast */
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.taichi::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 50%;
+    height: 50%;
+    background: #fff;
+    border-radius: 50%;
+    transform: translateY(-50%);
+    box-shadow: inset 0 0 0 10px #000;
+    /* The black dot inside white */
+}
+
+.taichi::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    right: 0;
+    width: 50%;
+    height: 50%;
+    background: #000;
+    border-radius: 50%;
+    transform: translateY(-50%);
+    box-shadow: inset 0 0 0 10px #fff;
+    /* The white dot inside black */
+    z-index: 1;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Smoke / Fog Effect */
+.smoke-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at 50% 50%, transparent 20%, #fdfbf7 90%);
+    /* Match paper-bg */
+    pointer-events: none;
+    z-index: 10;
+    opacity: 0.8;
+}
+
+/* Exit Animation */
+.smoke-dissolve {
+    animation: smokeClear 2.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes smokeClear {
+    0% {
+        opacity: 1;
+        transform: scale(1);
+        filter: blur(0px);
+    }
+
+    50% {
+        opacity: 0.8;
+        filter: blur(5px);
+    }
+
+    100% {
+        opacity: 0;
+        transform: scale(1.5);
+        filter: blur(20px);
+        visibility: hidden;
+    }
+}
+
+.taichi-exit {
+    animation: taichiScaleOut 0.8s ease-in forwards;
+}
+
+@keyframes taichiScaleOut {
+    0% {
+        transform: scale(1) rotate(0deg);
+        opacity: 1;
+    }
+
+    100% {
+        transform: scale(0.1) rotate(180deg);
+        opacity: 0;
+    }
+}
+
+/* Cinematic Smoke Text */
+.text-smoke-container {
+    perspective: 1000px;
+}
+
+.smoke-text-enter {
+    animation: smokeIn 2.0s cubic-bezier(0.2, 0, 0.1, 1) forwards;
+}
+
+.smoke-text-exit {
+    /* Faster exit to clear stage */
+    animation: smokeOut 1.5s cubic-bezier(0.4, 0, 1, 1) forwards;
+    opacity: 0;
+}
+
+@keyframes smokeIn {
+    0% {
+        opacity: 0;
+        filter: blur(15px);
+        transform: scale(1.2) translateY(10px);
+        /* Start slightly below/center, rising up? Or dropping in? Let's simply condense from spread out */
+        letter-spacing: 15px;
+    }
+
+    100% {
+        opacity: 1;
+        filter: blur(0px);
+        transform: scale(1) translateY(0);
+        letter-spacing: normal;
+    }
+}
+
+@keyframes smokeOut {
+    0% {
+        opacity: 1;
+        filter: blur(0px);
+        transform: scale(1);
+        letter-spacing: normal;
+    }
+
+    100% {
+        opacity: 0;
+        filter: blur(20px);
+        transform: scale(1.1) translateY(-20px);
+        /* Drift up slightly */
+        letter-spacing: 10px;
+    }
+}
+
+/* Real Particle Smoke */
+.smoke-particle {
+    position: absolute;
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.9), rgba(220, 220, 220, 0) 70%);
+    opacity: 0;
+    pointer-events: none;
+    z-index: 9998;
+    /* Below log text but above base */
+    filter: blur(8px);
+}
+
+@keyframes puffOut {
+    0% {
+        opacity: 0.8;
+        transform: translate(0, 0) scale(1) rotate(0deg);
+    }
+
+    100% {
+        opacity: 0;
+        transform: translate(var(--tx), var(--ty)) scale(4) rotate(var(--r));
+    }
+}
