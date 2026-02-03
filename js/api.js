@@ -1,10 +1,35 @@
+/**
+ * DeepSeek API Client
+ * Handles communication with DeepSeek chat API with streaming support
+ * Optimized with AbortController for request cancellation
+ */
 class DeepSeekAPI {
     constructor() {
-        // Updated to explicit v1 endpoint
-        this.baseUrl = "https://api.deepseek.com/chat/completions";
-        this.model = "deepseek-chat";
+        const config = window.APP_CONSTANTS?.API || {};
+        this.baseUrl = config.DEEPSEEK_URL || "https://api.deepseek.com/chat/completions";
+        this.model = config.DEEPSEEK_MODEL || "deepseek-chat";
+        this.temperature = config.TEMPERATURE || 1.3;
+        this.currentController = null; // For request cancellation
     }
 
+    /**
+     * Abort any ongoing request
+     */
+    abort() {
+        if (this.currentController) {
+            this.currentController.abort();
+            this.currentController = null;
+            console.log("[DeepSeekAPI] Request aborted");
+        }
+    }
+
+    /**
+     * Stream chat completion from DeepSeek API
+     * @param {Array} messages - Array of message objects with role and content
+     * @param {Function} onChunk - Callback for each streamed chunk
+     * @param {Function} onComplete - Callback when streaming completes
+     * @param {Function} onError - Callback for error handling
+     */
     async streamChat(messages, onChunk, onComplete, onError) {
         const apiKey = window.appState.getApiKey();
 
@@ -13,10 +38,18 @@ class DeepSeekAPI {
             return;
         }
 
+        // Abort any previous request
+        this.abort();
+
+        // Create new abort controller for this request
+        this.currentController = new AbortController();
+        const signal = this.currentController.signal;
+
         try {
             const response = await fetch(this.baseUrl, {
                 method: "POST",
-                mode: "cors", // Explicitly request CORS
+                mode: "cors",
+                signal: signal, // Add abort signal
                 headers: {
                     "Content-Type": "application/json",
                     "Authorization": `Bearer ${apiKey}`
@@ -25,13 +58,12 @@ class DeepSeekAPI {
                     model: this.model,
                     messages: messages,
                     stream: true,
-                    temperature: 1.3
+                    temperature: this.temperature
                 })
             });
 
             if (!response.ok) {
                 const err = await response.text();
-                // Handle 401 specifically
                 if (response.status === 401) {
                     throw new Error("API Key 无效，请检查配置。");
                 }
@@ -62,15 +94,24 @@ class DeepSeekAPI {
                                 onChunk(content);
                             }
                         } catch (e) {
-                            // console.error("Parse error", e);
+                            // Skip malformed JSON chunks
                         }
                     }
                 }
             }
 
+            this.currentController = null;
             if (onComplete) onComplete();
 
         } catch (error) {
+            this.currentController = null;
+
+            // Handle abort error silently
+            if (error.name === 'AbortError') {
+                console.log("[DeepSeekAPI] Request was cancelled");
+                return;
+            }
+
             console.error("DeepSeek API Error:", error);
             if (error.message.includes("Failed to fetch")) {
                 onError("无法连接到 DeepSeek 服务器。\n可能的解决方案：\n1. 检查网络连接。\n2. 如果你直接打开了 HTML 文件，浏览器可能会拦截请求 (CORS)。请尝试搭建本地服务器 (Localhost) 运行。");

@@ -2,12 +2,14 @@ class StateManager {
     constructor() {
         this.db = window.JsonDB;
         this.listeners = [];
+        this.CONST = window.APP_CONSTANTS || {};
 
         // Load User
-        this.user = this.db.collection('users').findOne({ _id: 'current_user' });
+        const userId = this.CONST.USER?.CURRENT_USER_ID || 'current_user';
+        this.user = this.db.collection(this.CONST.COLLECTIONS?.USERS || 'users').findOne({ _id: userId });
         if (!this.user) {
             this.user = this.getInitialUser();
-            this.db.collection('users').insert(this.user);
+            this.db.collection(this.CONST.COLLECTIONS?.USERS || 'users').insert(this.user);
         }
 
         // Current Runtime State (not persistent in DB directly, but linked)
@@ -18,8 +20,9 @@ class StateManager {
     }
 
     getInitialUser() {
+        const userId = this.CONST.USER?.CURRENT_USER_ID || 'current_user';
         return {
-            _id: 'current_user',
+            _id: userId,
             username: "Guest",
             level: 1,
             title: "初级修行者",
@@ -28,14 +31,15 @@ class StateManager {
             unlockedSkills: [],
             completedScenarios: [],
             apiKey: "",
-            currentMode: "mode_basic"
+            currentMode: "mode_basic",
+            consecutiveFailures: 0
         };
     }
 
     // --- Session Management ---
     ensureSession() {
         // Find latest session or create new
-        const sessions = this.db.collection('sessions').find();
+        const sessions = this.db.collection(this.CONST.COLLECTIONS?.SESSIONS || 'sessions').find();
         if (sessions.length > 0) {
             // Sort by created_at descending to get latest
             sessions.sort((a, b) => (b._created_at || 0) - (a._created_at || 0));
@@ -51,7 +55,7 @@ class StateManager {
             title: "新的修行 (New Session)",
             mode: this.user.currentMode
         };
-        this.db.collection('sessions').insert(doc);
+        this.db.collection(this.CONST.COLLECTIONS?.SESSIONS || 'sessions').insert(doc);
         this.currentSessionId = doc._id; // insert adds _id
         this.notifyListeners();
     }
@@ -68,7 +72,8 @@ class StateManager {
     // --- Actions ---
 
     saveUser() {
-        this.db.collection('users').update({ _id: 'current_user' }, this.user);
+        const userId = this.CONST.USER?.CURRENT_USER_ID || 'current_user';
+        this.db.collection(this.CONST.COLLECTIONS?.USERS || 'users').update({ _id: userId }, this.user);
         this.notifyListeners();
     }
 
@@ -126,12 +131,15 @@ class StateManager {
     }
 
     setApiKey(key) {
-        this.user.apiKey = key;
+        // Obfuscate API key before storing (basic protection)
+        this.user.apiKey = window.Utils ? window.Utils.obfuscate.encode(key) : key;
         this.saveUser();
     }
 
     getApiKey() {
-        return this.user.apiKey;
+        // Decode obfuscated API key
+        const stored = this.user.apiKey;
+        return window.Utils ? window.Utils.obfuscate.decode(stored) : stored;
     }
 
     setMode(modeId) {
@@ -140,7 +148,7 @@ class StateManager {
 
         // Also update current session mode
         if (this.currentSessionId) {
-            this.db.collection('sessions').update({ _id: this.currentSessionId }, { mode: modeId });
+            this.db.collection(this.CONST.COLLECTIONS?.SESSIONS || 'sessions').update({ _id: this.currentSessionId }, { mode: modeId });
         }
     }
 
@@ -148,9 +156,27 @@ class StateManager {
         return this.user.currentMode;
     }
 
+    // --- Failure Tracking (3 Strikes Rule) ---
+    recordFailure() {
+        this.user.consecutiveFailures = (this.user.consecutiveFailures || 0) + 1;
+        this.saveUser();
+        return this.user.consecutiveFailures;
+    }
+
+    resetFailures() {
+        if (this.user.consecutiveFailures > 0) {
+            this.user.consecutiveFailures = 0;
+            this.saveUser();
+        }
+    }
+
+    getFailures() {
+        return this.user.consecutiveFailures || 0;
+    }
+
     // --- Chat History (Logged to 'logs' collection) ---
     addChatMessage(role, content) {
-        this.db.collection('logs').insert({
+        this.db.collection(this.CONST.COLLECTIONS?.LOGS || 'logs').insert({
             sessionId: this.currentSessionId,
             role: role,
             content: content
@@ -161,7 +187,7 @@ class StateManager {
     getChatHistory() {
         if (!this.currentSessionId) return [];
         // Find logs for current session
-        const logs = this.db.collection('logs').find({ sessionId: this.currentSessionId });
+        const logs = this.db.collection(this.CONST.COLLECTIONS?.LOGS || 'logs').find({ sessionId: this.currentSessionId });
         // Sort chronologically
         return logs.sort((a, b) => a._created_at - b._created_at);
     }
@@ -169,7 +195,7 @@ class StateManager {
     clearHistory() {
         // Only clear for current session
         if (this.currentSessionId) {
-            this.db.collection('logs').delete({ sessionId: this.currentSessionId });
+            this.db.collection(this.CONST.COLLECTIONS?.LOGS || 'logs').delete({ sessionId: this.currentSessionId });
         }
         this.notifyListeners();
     }

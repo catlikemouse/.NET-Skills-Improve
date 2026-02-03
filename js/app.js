@@ -235,37 +235,70 @@ ${s.unlockedSkills.length > 0 ? s.unlockedSkills.map(sk => `*   ✨ ${sk}`).join
             },
             () => {
                 cursor.remove();
-                agentBubble.innerHTML = marked.parse(fullResponse);
-                state.addChatMessage("agent", fullResponse);
 
-                // --- ARCHITECT SYSTEM PARSER ---
-                // Look for JSON command block: ```json { "cmd": ... } ```
-                const cmdMatch = fullResponse.match(/```json\s*(\{\s*"cmd".*?\})\s*```/s);
-                if (cmdMatch) {
+                // --- Use shared utility for parsing AI response ---
+                const { cleanContent, command } = window.Utils ?
+                    window.Utils.parseAIResponse(fullResponse) :
+                    { cleanContent: fullResponse, command: null };
+
+                let cleanResponse = cleanContent;
+
+                // Process settlement command if found
+                if (command && command.cmd === "settle") {
                     try {
-                        const cmdData = JSON.parse(cmdMatch[1]);
-                        if (cmdData.cmd === "settle") {
-                            // Execute Rewards
-                            let xpResult = { actualXp: 0, msg: "" };
-                            if (cmdData.xp > 0) {
-                                xpResult = state.addXp(cmdData.xp);
-                            }
+                        const cmdData = command;
+                        // Execute Rewards
+                        let xpResult = { actualXp: 0, msg: "" };
+
+                        if (cmdData.xp > 0) {
+                            // SUCCESS
+                            xpResult = state.addXp(cmdData.xp);
+                            state.resetFailures(); // Reset counter on success
                             if (cmdData.skill) state.unlockSkill(cmdData.skill);
+                        } else {
+                            // FAILURE (XP = 0)
+                            const failCount = state.recordFailure();
+                            console.log("Failure detected. Current strikes:", failCount);
 
-                            // Visual Feedback
-                            // AI Msg + System XP Msg + Anti-farming Note
-                            let sysMsg = `System Log: ${cmdData.msg}`;
-                            if (cmdData.xp > 0) {
-                                sysMsg += ` (XP +${xpResult.actualXp}${xpResult.msg})`;
+                            // 3 Strikes Rule
+                            if (failCount >= 3) {
+                                // Trigger Punishment
+                                setTimeout(() => {
+                                    const libraryModeId = window.APP_CONSTANTS?.MODES?.LIBRARY || 'mode_qa';
+                                    state.setMode(libraryModeId); // Send to Library
+                                    state.resetFailures();
+
+                                    const punishMsg = "🛑 **道心不稳 (Defeated)**\n你已连续失败 3 次。请前往 **悟道阁 (Library)** 查阅文档，静修之后再来挑战！";
+                                    components.renderChatBubble(punishMsg, "system");
+                                    state.addChatMessage("system", punishMsg);
+                                }, 1000);
                             }
-
-                            components.renderChatBubble(sysMsg, "system");
-                            state.addChatMessage("system", sysMsg);
                         }
+
+                        // Visual Feedback
+                        let sysMsg = `System Log: ${cmdData.msg}`;
+                        if (cmdData.xp > 0) {
+                            sysMsg += ` (XP +${xpResult.actualXp}${xpResult.msg})`;
+                        } else {
+                            const currentFails = state.getFailures();
+                            sysMsg += ` (XP +0) [失败次数: ${currentFails}/3]`;
+                        }
+
+                        components.renderChatBubble(sysMsg, "system");
+                        state.addChatMessage("system", sysMsg);
                     } catch (e) {
                         console.error("Command Parse Error", e);
                     }
                 }
+
+                // Update the bubble with the CLEANED and SANITIZED response
+                const parsedHtml = marked.parse(cleanResponse);
+                agentBubble.innerHTML = window.Utils ?
+                    window.Utils.sanitizeHTML(parsedHtml) :
+                    parsedHtml;
+
+                // Save cleaned response to chat history
+                state.addChatMessage("agent", cleanResponse);
             },
             (err) => {
                 cursor.remove();
