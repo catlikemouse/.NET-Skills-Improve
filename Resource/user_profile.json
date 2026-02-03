@@ -4,12 +4,13 @@
     "username": "Guest",
     "level": 1,
     "title": "初级修行者",
-    "xp": 0,
+    "xp": 30,
     "nextLevelXp": 100,
     "unlockedSkills": [],
     "completedScenarios": [],
-    "apiKey": "",
-    "currentMode": "mode_basic",
-    "_created_at": 1769415747559
+    "apiKey": "c2stOGM1MGU4YjU3MjA5NDc5Y2JhYjE0YmU4OTE4ODg0ZjU=",
+    "currentMode": "zone_novice",
+    "_created_at": 1769412154750,
+    "_updated_at": 1770088606271
   }
 ]

@@ -1,6 +1,7 @@
 /**
  * Lightweight JSON NoSQL Database Engine
  * Simulates a Document-Oriented Database (like MongoDB) via LocalStorage
+ * Optimized with debounce for better performance
  */
 
 class Collection {
@@ -8,6 +9,12 @@ class Collection {
         this.name = name;
         this.db = db;
         this.data = this._load();
+        this._pendingSync = false;
+
+        // Create debounced sync function
+        this._debouncedSync = window.Utils ?
+            window.Utils.debounce(() => this._performSync(), window.APP_CONSTANTS?.DEBOUNCE_MS || 500) :
+            () => this._performSync();
     }
 
     _load() {
@@ -16,10 +23,17 @@ class Collection {
     }
 
     _save() {
+        // Always save to localStorage immediately
         localStorage.setItem(this.db._getKey(this.name), JSON.stringify(this.data));
-        // Trigger server sync (granular)
-        if (this.db._syncToServer) {
+        // Trigger debounced server sync
+        this._pendingSync = true;
+        this._debouncedSync();
+    }
+
+    _performSync() {
+        if (this._pendingSync && this.db._syncToServer) {
             this.db._syncToServer(this.name, this.data);
+            this._pendingSync = false;
         }
     }
 
@@ -27,7 +41,7 @@ class Collection {
 
     insert(doc) {
         if (!doc._id) {
-            doc._id = Date.now().toString(36) + Math.random().toString(36).substr(2);
+            doc._id = window.Utils ? window.Utils.generateId() : Date.now().toString(36) + Math.random().toString(36).substr(2);
         }
         doc._created_at = Date.now();
         this.data.push(doc);
@@ -100,8 +114,8 @@ class Collection {
 }
 
 class JsonDB {
-    constructor(prefix = "deepseek_db::") {
-        this.prefix = prefix;
+    constructor(prefix) {
+        this.prefix = prefix || (window.APP_CONSTANTS?.DB_PREFIX) || 'deepseek_db::';
         this.collections = {};
     }
 
@@ -158,8 +172,11 @@ class JsonDB {
         const dump = {};
         // We need to know generic known collections, or scan local storage
         // For simplicity, we define the known ones or just scan our instantiated ones.
-        // Let's rely on explicit collections for this app: 'users', 'sessions', 'logs'
-        ['users', 'sessions', 'logs'].forEach(name => {
+        // Use constants for collection names
+        const collectionNames = window.APP_CONSTANTS ?
+            Object.values(window.APP_CONSTANTS.COLLECTIONS) :
+            ['users', 'sessions', 'logs'];
+        collectionNames.forEach(name => {
             dump[name] = this.collection(name).data;
         });
 

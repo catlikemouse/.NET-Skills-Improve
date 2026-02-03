@@ -73,16 +73,25 @@ const Components = {
         bubble.className = `chat-bubble ${type}`;
 
         if (type === 'agent') {
-            // Visualize JSON Cleaning (for history)
-            // Strip any JSON-like command blocks: ```json { ... } ``` or just { "cmd": ... }
-            let cleanContent = content;
-            cleanContent = cleanContent.replace(/```json\s*(\{[\s\S]*?"cmd"[\s\S]*?\})\s*```/gi, "");
-            cleanContent = cleanContent.replace(/```\s*(\{[\s\S]*?"cmd"[\s\S]*?\})\s*```/gi, "");
-            cleanContent = cleanContent.replace(/(\{[\s\S]*?"cmd"\s*:\s*"settle"[\s\S]*?\})\s*$/gi, "");
+            // Use shared utility for cleaning AI response
+            const { cleanContent } = window.Utils ?
+                window.Utils.parseAIResponse(content) :
+                { cleanContent: content };
 
-            bubble.innerHTML = marked.parse(cleanContent);
+            // Parse markdown and sanitize for XSS protection
+            const parsedHtml = marked.parse(cleanContent);
+            bubble.innerHTML = window.Utils ?
+                window.Utils.sanitizeHTML(parsedHtml) :
+                parsedHtml;
+        } else if (type === 'system') {
+            // System messages - parse markdown with sanitization
+            const parsedHtml = marked.parse(content);
+            bubble.innerHTML = window.Utils ?
+                window.Utils.sanitizeHTML(parsedHtml) :
+                parsedHtml;
         } else {
-            bubble.innerHTML = content; // User/System
+            // User messages - escape HTML to prevent XSS
+            bubble.textContent = content;
         }
 
         feed.appendChild(bubble);

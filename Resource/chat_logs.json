@@ -40,5 +40,54 @@
     "content": "System Log: 基础练习完成！ (XP +10)",
     "_id": "mkuwao6i90hymnpxao",
     "_created_at": 1769415487722
+  },
+  {
+    "sessionId": "mkuub8fzpps8ml9t0k",
+    "role": "user",
+    "content": "var adultStudents = students.Where(s => s.Age > 18).orderby(s => s.Name> 18).ToList();",
+    "_id": "mkuy8drps5lm0hsi01",
+    "_created_at": 1769418740149
+  },
+  {
+    "sessionId": "mkuub8fzpps8ml9t0k",
+    "role": "user",
+    "content": "var adultStudents = students.Where(s => s.Age > 18).orderby(s => s.Name> 18).ToList();",
+    "_id": "mkuy8yeumi7j3toxom",
+    "_created_at": 1769418766902
+  },
+  {
+    "sessionId": "mkuub8fzpps8ml9t0k",
+    "role": "agent",
+    "content": "啊哈！我看到了一个**小错误**！😊\n\n你的想法是对的——要按姓名排序，但有两个问题：\n\n1. **方法名大小写**：C#是大小写敏感的，应该是`OrderBy`而不是`orderby`\n2. **排序逻辑**：`s.Name > 18`这个比较不对，姓名是字符串，不能和数字比较\n\n**正确写法应该是：**\n```csharp\nvar adultStudents = students\n    .Where(s => s.Age > 18)\n    .OrderBy(s => s.Name)  // 按姓名升序排序\n    .ToList();\n```\n\n**或者用查询表达式：**\n```csharp\nvar adultStudents = (from s in students\n                    where s.Age > 18\n                    orderby s.Name  // 注意这里是orderby（小写）\n                    select s).ToList();\n```\n\n**注意：** 查询表达式中的`orderby`是小写，方法链中的`OrderBy`是大写开头！\n\n**再来个小挑战：**\n如果我想按年龄**降序**排列（年龄大的在前），然后按姓名**升序**排列（同年龄按姓名A-Z排），该怎么写呢？\n\n```json\n{ \"cmd\": \"settle\", \"xp\": 10, \"msg\": \"基础练习完成！\" }\n```",
+    "_id": "mkuy97is4rpefg5hij",
+    "_created_at": 1769418778708
+  },
+  {
+    "sessionId": "mkuub8fzpps8ml9t0k",
+    "role": "system",
+    "content": "System Log: 基础练习完成！ (XP +10)",
+    "_id": "mkuy97j2fu1y838n5e7",
+    "_created_at": 1769418778718
+  },
+  {
+    "sessionId": "mkuub8fzpps8ml9t0k",
+    "role": "user",
+    "content": "抱歉我不会",
+    "_id": "ml610zcwbjr1nvhsht",
+    "_created_at": 1770088561664
+  },
+  {
+    "sessionId": "mkuub8fzpps8ml9t0k",
+    "role": "user",
+    "content": "你好",
+    "_id": "ml6120cfipdpit5lqk",
+    "_created_at": 1770088609599
+  },
+  {
+    "sessionId": "mkuub8fzpps8ml9t0k",
+    "role": "agent",
+    "content": "别担心！不会是很正常的，我们都是从不会开始的。😊\n\n让我来教你刚才那个问题的答案：\n\n**按年龄降序，然后按姓名升序排列：**\n\n**方法链写法：**\n```csharp\nvar sortedStudents = students\n    .OrderByDescending(s => s.Age)    // 先按年龄降序\n    .ThenBy(s => s.Name)              // 再按姓名升序\n    .ToList();\n```\n\n**查询表达式写法：**\n```csharp\nvar sortedStudents = (from s in students\n                     orderby s.Age descending, s.Name ascending\n                     select s).ToList();\n```\n\n**解释一下：**\n- `OrderByDescending`：按指定条件**降序**排列\n- `ThenBy`：在第一个排序条件相同的情况下，按第二个条件排序\n- 在查询表达式中，多个排序条件用逗号分隔\n\n**举个简单例子：**\n假设我们有3个学生：\n1. 小明，20岁\n2. 小红，20岁  \n3. 小刚，18岁\n\n排序后会是：\n1. 小明（20岁，姓名\"小明\"）\n2. 小红（20岁，姓名\"小红\"）\n3. 小刚（18岁）\n\n你看，同样是20岁，就按姓名排序了！\n\n**现在来个简单问题：**\n如果我有一个数字列表 `List<int> numbers = new List<int> { 5, 1, 9, 3, 7 };`\n想用LINQ按**升序**排列，应该怎么写？\n\n```json\n{ \"cmd\": \"settle\", \"xp\": 0, \"msg\": \"没关系，我们慢慢来！\" }\n```",
+    "_id": "ml612ahiv12wcj7lwdr",
+    "_created_at": 1770088622742
   }
 ]
